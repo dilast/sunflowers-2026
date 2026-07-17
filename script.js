@@ -160,7 +160,7 @@ function renderGarden(rows) {
       <div class="name">${row.name}</div>
       <div class="stats">
         ${row.height} in tall
-        ${row.bloomDiameter ? `&middot; ${row.bloomDiameter} in bloom` : ""}
+        &middot; ${row.bloomDiameter ? `${row.bloomDiameter} in bloom` : "no bloom yet"}
       </div>
       <div class="last-updated">Last measured ${formatDate(row.measurementDate)}</div>
     </div>
@@ -169,33 +169,62 @@ function renderGarden(rows) {
 
 // --- Growth chart ---
 
-function renderChart(rows) {
-  const chartEl = document.getElementById("chart");
+const CHART_METRICS = {
+  height: {
+    field: "height",
+    axisLabel: "Height (in)",
+    emptyMessage: "No measurements yet — check back once the season gets going!",
+  },
+  bloomDiameter: {
+    field: "bloomDiameter",
+    axisLabel: "Bloom Diameter (in)",
+    emptyMessage: "No blooms recorded yet — check back once they start opening!",
+  },
+};
 
-  if (rows.length === 0) {
-    chartEl.innerHTML = `<p class="empty-state">No measurements yet — check back once the season gets going!</p>`;
+function monthTicks(minTime, maxTime) {
+  const ticks = [];
+  const d = new Date(minTime);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(1);
+  if (d.getTime() < minTime) d.setMonth(d.getMonth() + 1);
+  while (d.getTime() <= maxTime) {
+    ticks.push(d.getTime());
+    d.setMonth(d.getMonth() + 1);
+  }
+  return ticks;
+}
+
+function renderChart(rows, metricKey) {
+  const chartEl = document.getElementById("chart");
+  const metric = CHART_METRICS[metricKey];
+
+  const relevantRows = rows.filter((r) => typeof r[metric.field] === "number" && r[metric.field] > 0);
+
+  if (relevantRows.length === 0) {
+    chartEl.innerHTML = `<p class="empty-state">${metric.emptyMessage}</p>`;
     return;
   }
 
-  const byPerson = groupByPerson(rows);
+  const byPerson = groupByPerson(relevantRows);
 
   const width = 800;
   const height = 400;
-  const margin = { top: 20, right: 20, bottom: 40, left: 50 };
+  const margin = { top: 20, right: 20, bottom: 55, left: 50 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
 
-  const dateNums = rows.map((r) => new Date(r.measurementDate).getTime());
+  const dateNums = relevantRows.map((r) => new Date(r.measurementDate).getTime());
   const minDate = Math.min(...dateNums);
   const maxDate = Math.max(...dateNums);
-  const maxHeight = Math.max(...rows.map((r) => r.height)) * 1.1;
+  const maxVal = Math.max(...relevantRows.map((r) => r[metric.field])) * 1.1;
 
   const x = (dateStr) => {
     const t = new Date(dateStr).getTime();
     if (maxDate === minDate) return margin.left;
     return margin.left + ((t - minDate) / (maxDate - minDate)) * plotWidth;
   };
-  const y = (val) => margin.top + plotHeight - (val / maxHeight) * plotHeight;
+  const y = (val) => margin.top + plotHeight - (val / maxVal) * plotHeight;
 
   const colors = ["#d9932f", "#5c9c3a", "#8a4fbf", "#c94f4f", "#2f8fd9"];
   let colorIndex = 0;
@@ -208,12 +237,12 @@ function renderChart(rows) {
     colorIndex++;
 
     const pathData = entries.map((e, i) =>
-      `${i === 0 ? "M" : "L"} ${x(e.measurementDate)} ${y(e.height)}`
+      `${i === 0 ? "M" : "L"} ${x(e.measurementDate)} ${y(e[metric.field])}`
     ).join(" ");
     lines += `<path d="${pathData}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
 
     points += entries.map((e) =>
-      `<circle cx="${x(e.measurementDate)}" cy="${y(e.height)}" r="4" fill="${color}"/>`
+      `<circle cx="${x(e.measurementDate)}" cy="${y(e[metric.field])}" r="4" fill="${color}"/>`
     ).join("");
 
     legend += `<span style="display:inline-flex;align-items:center;gap:0.4rem;margin-right:1rem;">
@@ -224,28 +253,42 @@ function renderChart(rows) {
   const yTicks = 5;
   let yAxis = "";
   for (let i = 0; i <= yTicks; i++) {
-    const val = (maxHeight / yTicks) * i;
+    const val = (maxVal / yTicks) * i;
     const yPos = y(val);
     yAxis += `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="#eee"/>`;
     yAxis += `<text x="${margin.left - 8}" y="${yPos + 4}" font-size="11" text-anchor="end" fill="#666">${Math.round(val)}</text>`;
   }
+
+  const plotBottom = margin.top + plotHeight;
+  let xAxis = "";
+  for (const t of monthTicks(minDate, maxDate)) {
+    const xPos = x(new Date(t).toISOString());
+    xAxis += `<line x1="${xPos}" y1="${margin.top}" x2="${xPos}" y2="${plotBottom}" stroke="#f2f2f2"/>`;
+    xAxis += `<text x="${xPos}" y="${plotBottom + 16}" font-size="11" text-anchor="middle" fill="#666">${new Date(t).toLocaleDateString(undefined, { month: "short" })}</text>`;
+  }
+
+  const yLabelY = margin.top + plotHeight / 2;
 
   chartEl.innerHTML = `
     <div style="margin-bottom:0.5rem;">${legend}</div>
     <div class="chart-scroll">
       <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
         ${yAxis}
-        <line x1="${margin.left}" y1="${margin.top + plotHeight}" x2="${width - margin.right}" y2="${margin.top + plotHeight}" stroke="#333"/>
+        ${xAxis}
+        <line x1="${margin.left}" y1="${plotBottom}" x2="${width - margin.right}" y2="${plotBottom}" stroke="#333"/>
         ${lines}
         ${points}
-        <text x="${margin.left}" y="${height - 8}" font-size="11" fill="#666">Measurement date &rarr;</text>
-        <text x="10" y="${margin.top}" font-size="11" fill="#666" transform="rotate(-90 10 ${margin.top})">Height (in)</text>
+        <text x="${width / 2}" y="${height - 8}" font-size="11" text-anchor="middle" fill="#666">Measurement date</text>
+        <text x="15" y="${yLabelY}" font-size="11" fill="#666" text-anchor="middle" transform="rotate(-90 15 ${yLabelY})">${metric.axisLabel}</text>
       </svg>
     </div>
   `;
 }
 
 // --- View toggle ---
+
+let allRows = [];
+let currentMetric = "height";
 
 function setupToggle() {
   const gardenBtn = document.getElementById("garden-btn");
@@ -268,11 +311,31 @@ function setupToggle() {
   });
 }
 
+function setupMetricToggle() {
+  const heightBtn = document.getElementById("metric-height-btn");
+  const bloomBtn = document.getElementById("metric-bloom-btn");
+
+  heightBtn.addEventListener("click", () => {
+    heightBtn.classList.add("active");
+    bloomBtn.classList.remove("active");
+    currentMetric = "height";
+    renderChart(allRows, currentMetric);
+  });
+
+  bloomBtn.addEventListener("click", () => {
+    bloomBtn.classList.add("active");
+    heightBtn.classList.remove("active");
+    currentMetric = "bloomDiameter";
+    renderChart(allRows, currentMetric);
+  });
+}
+
 async function init() {
   setupToggle();
-  const rows = await loadData();
-  renderGarden(rows);
-  renderChart(rows);
+  setupMetricToggle();
+  allRows = await loadData();
+  renderGarden(allRows);
+  renderChart(allRows, currentMetric);
 
   document.getElementById("last-updated").textContent =
     `Last updated: ${new Date().toLocaleString()}`;
