@@ -72,6 +72,23 @@ header h1 {
   color: white;
 }
 
+.update-link {
+  display: block;
+  width: fit-content;
+  margin: 0 auto 1.5rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 999px;
+  text-align: center;
+}
+
+.update-link:hover {
+  background: var(--accent-dark);
+}
+
 main {
   padding: 1.5rem;
 }
