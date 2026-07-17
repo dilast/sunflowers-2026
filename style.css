@@ -1,0 +1,126 @@
+:root {
+  --sky: #fff8e7;
+  --ground: #e9dcb8;
+  --text: #3a2e1f;
+  --accent: #d9932f;
+  --accent-dark: #a5651b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--sky);
+  color: var(--text);
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 3px solid var(--accent);
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--accent);
+  background: transparent;
+  color: var(--accent-dark);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.toggle-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+main {
+  padding: 1.5rem;
+}
+
+.view.hidden {
+  display: none;
+}
+
+.garden {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 2rem 1rem 0;
+  min-height: 420px;
+  background: linear-gradient(to bottom, transparent 0%, transparent 85%, var(--ground) 85%, var(--ground) 100%);
+  border-radius: 8px;
+}
+
+.flower-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 140px;
+}
+
+.flower-card .name {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.flower-card .stats {
+  font-size: 0.8rem;
+  color: var(--accent-dark);
+  text-align: center;
+}
+
+.flower-card .last-updated {
+  font-size: 0.7rem;
+  color: #9a8b6f;
+  text-align: center;
+  margin-top: 0.15rem;
+}
+
+.empty-state {
+  color: #7a6b4f;
+  font-style: italic;
+  padding: 2rem 0;
+}
+
+.chart {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.chart-scroll {
+  overflow-x: auto;
+}
+
+.chart-scroll svg {
+  display: block;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: #7a6b4f;
+}
