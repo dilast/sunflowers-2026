@@ -1,6 +1,5 @@
 :root {
   --sky: #fff8e7;
-  --ground: #e9dcb8;
   --text: #3a2e1f;
   --accent: #d9932f;
   --accent-dark: #a5651b;
@@ -86,10 +85,7 @@ main {
   align-items: flex-end;
   gap: 1.5rem;
   flex-wrap: wrap;
-  padding: 2rem 1rem 0;
-  min-height: 420px;
-  background: linear-gradient(to bottom, transparent 0%, transparent 85%, var(--ground) 85%, var(--ground) 100%);
-  border-radius: 8px;
+  padding: 2rem 1rem;
 }
 
 .flower-card {

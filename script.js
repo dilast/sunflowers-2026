@@ -97,6 +97,7 @@ const PETAL_COLOR_DARK = "#e0a800";
 const CENTER_COLOR = "#5c3d1e";
 const STEM_COLOR = "#4a7c2f";
 const LEAF_COLOR = "#5c9c3a";
+const GROUND_COLOR = "#c9a86a";
 
 const STEM_WIDTH = 8;
 
@@ -137,6 +138,7 @@ function flowerSVG(row) {
 
   return `
 <svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="${stemX}" cy="${stemBottomY}" rx="34" ry="8" fill="${GROUND_COLOR}"/>
   <line x1="${stemX}" y1="${stemBottomY}" x2="${stemX}" y2="${stemTopY}" stroke="${STEM_COLOR}" stroke-width="${stemWidth}" stroke-linecap="round"/>
   <path d="M ${stemX} ${leafY1} Q ${stemX - 35} ${leafY1 - 10} ${stemX - 5} ${leafY1 - 25}" fill="${LEAF_COLOR}"/>
   <path d="M ${stemX} ${leafY2} Q ${stemX + 35} ${leafY2 - 10} ${stemX + 5} ${leafY2 - 25}" fill="${LEAF_COLOR}"/>
